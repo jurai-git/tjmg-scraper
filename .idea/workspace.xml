@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6bb1b65-9b8b-4d51-b4f9-c646290908ee" name="Changes" comment="atualizar o formatador do scraper e adicionar limite de caracteres para o acórdão.&#10;Adicionado também outro quebra-captcha">
-      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/numeros.txt" beforeDir="false" afterPath="$PROJECT_DIR$/numeros.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +119,7 @@
       <workItem from="1716744036154" duration="4500000" />
       <workItem from="1716765965323" duration="9145000" />
       <workItem from="1716779859425" duration="1661000" />
-      <workItem from="1716846842811" duration="927000" />
+      <workItem from="1716846842811" duration="2055000" />
     </task>
     <task id="LOCAL-00001" summary="adicionar documentacão e limpar o código em geral">
       <option name="closed" value="true" />
@@ -150,7 +152,7 @@
     <SUITE FILE_PATH="coverage/tjmg_scraper$catador_de_numeros.coverage" NAME="catador_de_numeros Coverage Results" MODIFIED="1712072000601" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/tjmg_scraper$scraper.coverage" NAME="scraper Coverage Results" MODIFIED="1711655657579" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/tjmg_scraper$run.coverage" NAME="run Coverage Results" MODIFIED="1716777613515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/tjmg_scraper$main.coverage" NAME="main Coverage Results" MODIFIED="1716847372149" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/tjmg_scraper$main.coverage" NAME="main Coverage Results" MODIFIED="1716848717953" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/tjmg_scraper$process_scraper.coverage" NAME="process_scraper Coverage Results" MODIFIED="1716847368678" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/tjmg_scraper$test.coverage" NAME="test Coverage Results" MODIFIED="1712961408437" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
