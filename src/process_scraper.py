@@ -11,8 +11,10 @@ from src import number_scraper as ns
 def remove_first_line(filepath):
     with open(filepath, 'r') as file:
         lines = file.readlines()[1:]
+        file.close()
     with open(filepath, 'w') as file:
         file.writelines(lines)
+        file.close()
 
 
 def get_inteiro_teor(numproc: str, dir = getcwd() + "/inteiros-teores", timeout=3, filename = None):
@@ -160,13 +162,24 @@ def get_processo_table_essentials_file(file, connection, cursor, dir=getcwd() + 
             """
 
     # get numprocs from file
-    with open(file, "r+") as f:
-        numeros = [numero.strip("\n") for numero in f.readlines()]
 
     failed_requests = 0
-    for numero in numeros:
+    failed_request_limit = 9
+    with open(file, "r+") as f:
+        numero = f.readline().strip("\n")
+        remove_first_line(file)
+        f.close()
 
-        if failed_requests > 9:
+    contador = 0
+    while numero is not None:
+        # get new numero
+        with open(file, "r+") as f:
+            numero = f.readline().strip("\n")
+            remove_first_line(file)
+
+        sleep(0.2)
+
+        if failed_requests > failed_request_limit:
             input("Houveram mais do que 9 requisicões falhadas. Verifique sua conexão com a internet e pressione enter para continuar")
             failed_requests = 0
 
@@ -185,8 +198,11 @@ def get_processo_table_essentials_file(file, connection, cursor, dir=getcwd() + 
         try:
             cursor.execute(insert_query, data)
             connection.commit()
+            print("deu tudo certo")
+            failed_requests = 0
         except mysql.connector.Error:
             failed_requests += 1
-            print("error inserting into table")
-        finally:
-            remove_first_line(file)
+            print("error inserting into table " + failed_requests.__str__())
+            continue
+
+
