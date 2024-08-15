@@ -1,19 +1,18 @@
-import mysql.connector.cursor
-
+import os
 import mysql.connector
-
+from dotenv import load_dotenv
 from src import process_scraper as tjmg
 
-# criar conexao mysql
+load_dotenv()
+
 connector = mysql.connector.connect(
-    host=' ',
-    user=' ',
-    password=' ',
-    database= ' ',
+    host=os.getenv('DB_HOST'),
+    user=os.getenv('DB_USER'),
+    password=os.getenv('DB_PASSWORD'),
+    database=os.getenv('DB_NAME'),
     charset='utf8mb4',
     connect_timeout=10
 )
 cursor = connector.cursor()
 
-#test
-tjmg.get_processo_table_essentials_file("xurrasco.txt", connection=connector, cursor=cursor)
+tjmg.get_processo_table_essentials_file('', connection=connector, cursor=cursor)
