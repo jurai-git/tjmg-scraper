@@ -2,10 +2,10 @@ import re
 import fitz
 import mysql
 import requests
+from tjmg_scraper import number_scraper as ns
 from os import getcwd
 from time import sleep
 from mysql.connector import Error
-from src import number_scraper as ns
 
 
 def remove_first_line(filepath):
