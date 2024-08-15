@@ -22,40 +22,30 @@ def normalize_tjmg_data_set(load_file: str, upload_file: str = None):
     :return: list of json
     """
 
-    # Tenta ler o json
     try:
         with open(load_file, 'r', encoding='utf-8') as file:
             data_json = json.load(file)
     except Exception as e:
         print(e)
 
-    # Padrões para o Regex
     pattern_list = [r'^.*?EMENTA:', r'(?<=\n)\d+(?=\n)', r'Tribunal de Justiça de Minas Gerais\n']
 
-    # Dados principais
     data = []
 
-    # Itera sobre cada dict python
     for key, value in data_json.items():
-        # Remove os padrões dispensáveis básicos
         value = re.sub('|'.join(pattern_list), '', value, flags=re.DOTALL)
 
-        # Encontra a ementa e separa as estrofes
         menu_text = re.sub(r'(.*?)A\s+C\s+Ó\s+R\s+D\s+Ã\s+O.*', r'\1', value, flags=re.DOTALL)
         split = menu_text.split('\n\n')
 
-        # Retira, caso tenha mais de uma estrofe, informações dispensáveis
         menu_text = ' '.join(split[:-1]) if len(split) != 1 else menu_text.join(split)
 
-        # Encontra e formata o acórdão
         judgment_text = re.sub(r'.*?V\sO\sT\sO\s+(.*?)SÚMULA.*', r'\1', value, flags=re.DOTALL)
         judgment_text = re.sub(r'\s+', ' ', judgment_text)
 
-        # Encontra e formata a súmula
         summary_text = re.sub(r'.*?SÚMULA:+(.*?)', r'\1', value, flags=re.DOTALL)
         summary_text = re.sub(r'\s+', ' ', summary_text)
 
-        # Constrói o dicionário com dados formatados
         data.append(
             {
                 key: {
@@ -66,10 +56,8 @@ def normalize_tjmg_data_set(load_file: str, upload_file: str = None):
              }
         )
 
-    # Serializa a estrutura para json
     data = json.dumps(data, ensure_ascii=False, indent=2)
 
-    # Cria e escreve o arquivo json
     try:
         verify_dir(upload_file)
 
@@ -78,7 +66,4 @@ def normalize_tjmg_data_set(load_file: str, upload_file: str = None):
     except Exception as e:
         print(e)
 
-    # Retorna a lista de json
     return data
-
-

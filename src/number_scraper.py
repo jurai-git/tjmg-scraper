@@ -1,12 +1,7 @@
 import os
-from datetime import datetime
 from os import getcwd
 from time import sleep
-import re
-import mysql
-import requests
 import speech_recognition as sr
-from fitz import fitz
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium import webdriver
@@ -27,6 +22,7 @@ def get_text_from_audio(audio_file):
         text = r.recognize_google(audio_text, language='pt-BR')
     return text
 
+
 def get_nums_processuais(pesquisa_livre, lista_classe, data_inicio, data_final):
     """
     Scraper para coleta de números processuasis no TJMG.
@@ -40,64 +36,69 @@ def get_nums_processuais(pesquisa_livre, lista_classe, data_inicio, data_final):
     :return: list of strings
     """
 
-    # formatar o url da pesquisa
-    url = "https://www5.tjmg.jus.br/jurisprudencia/pesquisaPalavrasEspelhoAcordao.do;jsessionid=AC19FB65083C3B4D5D366A5CC1D1363C.juri_node1?numeroRegistro=1&totalLinhas=1&palavras={pesquisa_livre}&pesquisarPor=ementa&orderByData=2&codigoOrgaoJulgador=&codigoCompostoRelator=&classe=&listaClasse={lista_classe}&codigoAssunto=&dataPublicacaoInicial={data_inicial}&dataPublicacaoFinal={data_final}&dataJulgamentoInicial=&dataJulgamentoFinal=&siglaLegislativa=&referenciaLegislativa=Clique+na+lupa+para+pesquisar+as+refer%EAncias+cadastradas...&numeroRefLegislativa=&anoRefLegislativa=&legislacao=&norma=&descNorma=&complemento_1=&listaPesquisa=&descricaoTextosLegais=&observacoes=&linhasPorPagina=5000&pesquisaPalavras=Pesquisar"
-    url = url.format(pesquisa_livre = pesquisa_livre, lista_classe = lista_classe, data_final = data_final, data_inicial = data_inicio)
+    url = ('https://www5.tjmg.jus.br/jurisprudencia/pesquisaPalavrasEspelhoAcordao.do;jsessionid'
+           '=AC19FB65083C3B4D5D366A5CC1D1363C.juri_node1?numeroRegistro=1&totalLinhas=1&palavras={'
+           'pesquisa_livre}&pesquisarPor=ementa&orderByData=2&codigoOrgaoJulgador=&codigoCompostoRelator=&classe'
+           '=&listaClasse={lista_classe}&codigoAssunto=&dataPublicacaoInicial={data_inicial}&dataPublicacaoFinal={'
+           'data_final}&dataJulgamentoInicial=&dataJulgamentoFinal=&siglaLegislativa=&referenciaLegislativa=Clique+na'
+           '+lupa+para+pesquisar+as+refer%EAncias+cadastradas...&numeroRefLegislativa=&anoRefLegislativa=&legislacao'
+           '=&norma=&descNorma=&complemento_1=&listaPesquisa=&descricaoTextosLegais=&observacoes=&linhasPorPagina'
+           '=5000&pesquisaPalavras=Pesquisar')
+    url = url.format(
+        pesquisa_livre=pesquisa_livre,
+        lista_classe=lista_classe,
+        data_final=data_final,
+        data_inicial=data_inicio
+    )
     print(url)
 
-    #inicializar o webdriver com o url da pesquisa
     options = Options()
-    options.set_preference("browser.download.folderList", 2)
-    options.set_preference("browser.download.manager.showWhenStarting", False)
-    options.set_preference("browser.download.dir", getcwd() + "/temp")
-    driver = webdriver.Firefox(options = options)
+    options.set_preference('browser.download.folderList', 2)
+    options.set_preference('browser.download.manager.showWhenStarting', False)
+    options.set_preference('browser.download.dir', getcwd() + '/temp')
+    driver = webdriver.Firefox(options=options)
     driver.get(url)
     wait = WebDriverWait(driver, 6)
-    captcha_file = getcwd() + "/temp"
+    captcha_file = getcwd() + '/temp'
 
-    # quebrar um eventual captcha
     while True:
-        # verificar se existe captcha
         try:
-            wait.until(EC.presence_of_element_located((By.ID, "captcha_text")))
+            wait.until(EC.presence_of_element_located((By.ID, 'captcha_text')))
         except:
-            # em caso negativo, deletar o arquivo de audio do captcha, se existir
             try:
                 os.remove(captcha_file)
             except:
                 pass
             break
         try:
-            # fazer a limpeza se o arquivo de audio existir (o que significa que é a segunda ou mais tentativa)
             if os.path.isfile(captcha_file):
                 os.remove(captcha_file)
-                driver.find_element(By.ID, "captcha_text").clear()
+                driver.find_element(By.ID, 'captcha_text').clear()
                 driver.find_element(By.ID, 'gerar').click()
             driver.find_element(By.XPATH, '/html/body/table/tbody/tr[3]/td/table/tbody/tr[4]/td/a[2]').click()
             sleep(1)
             text = get_text_from_audio(sr.AudioFile(captcha_file))
-            driver.find_element(By.ID, "captcha_text").send_keys(text)
+            driver.find_element(By.ID, 'captcha_text').send_keys(text)
             sleep(1)
-        except:
+        except Exception as e:
             continue
 
-    # esperar um tempo até a página dos processos ter carregado completamente
     wait = WebDriverWait(driver, 10)
 
-    # raspar os números da página
     numeros = []
     try:
         processos = driver.find_elements(By.CSS_SELECTOR, '.caixa_processo')
         i = 0
         for processo in processos:
             print(i)
-            numeros.append(processo.find_element(By.CSS_SELECTOR, "a > br + div").text)
+            numeros.append(processo.find_element(By.CSS_SELECTOR, 'a > br + div').text)
             i += 1
-    except:
-        print("deu errado :c")
+    except Exception as e:
+        print('deu errado :c')
         sleep(2)
     driver.quit()
     return numeros
+
 
 def get_numproc_numbers(numproc: str):
     """
@@ -108,13 +109,12 @@ def get_numproc_numbers(numproc: str):
     :return: list of numprocs
     """
 
-    parts = ["" for _ in range(6)]
+    parts = ['' for _ in range(6)]
     partsindex = 0
     lastindex = 0
 
-    # separate the numproc onto its parts
     for i in range(len(numproc)):
-        if numproc[i] == "." or numproc[i] == "/" or numproc[i] == "-":
+        if numproc[i] == '.' or numproc[i] == '/' or numproc[i] == '-':
             parts[partsindex] = numproc[lastindex:i]
             partsindex += 1
             lastindex = i + 1
