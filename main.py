@@ -3,7 +3,7 @@ import mysql.connector
 from typing import Dict, Optional
 from dotenv import load_dotenv
 from mysql.connector import Error, MySQLConnection
-from src import process_scraper as tjmg
+from tjmg_scraper import process_scraper as tjmg
 
 
 def load_env_vars() -> Dict[str, str]:
@@ -35,9 +35,18 @@ def connect_to_database(config: Dict) -> Optional[MySQLConnection]:
         return None
 
 
-if __name__ == '__main__':
+def main():
     env_config = load_env_vars()
     connector = connect_to_database(env_config)
     cursor = connector.cursor()
 
+    path = os.path.join(os.getcwd(), 'processos', 'temp')
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     tjmg.get_processo_table_essentials_file('test.txt', connection=connector, cursor=cursor)
+
+
+if __name__ == '__main__':
+    main()
