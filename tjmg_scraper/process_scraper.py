@@ -1,3 +1,4 @@
+import os.path
 import re
 import fitz
 import mysql
@@ -153,24 +154,24 @@ def get_processo_table_essentials_file(
         connection,
         cursor,
         path=getcwd() + '/processos',
-        lowerbound=700*5.5,
-        upperbound=4000*5.5,
-        delay=0.15
+        lowerbound=385e1,
+        upperbound=22e3,
+        max_fails=10
 ):
+    if not path:
+        path = os.path.join(getcwd(), 'processos')
 
     insert_query = """
             INSERT INTO processos (numero_tjmg, acordao, ementa, sumula) VALUES 
             (%s, %s, %s, %s)
             """
 
-    failed_requests = 0
-    failed_request_limit = 9
     with open(file, 'r+') as f:
         numero = f.readline().strip('\n')
         remove_first_line(file)
         f.close()
 
-    contador = 0
+    failed_requests = 0
     while numero is not None:
         with open(file, 'r+') as f:
             numero = f.readline().strip('\n')
@@ -178,7 +179,7 @@ def get_processo_table_essentials_file(
 
         sleep(0.2)
 
-        if failed_requests > failed_request_limit:
+        if failed_requests > max_fails:
             input(
                 'Houveram mais do que 9 requisicões falhadas. Verifique sua '
                 'conexão com a internet e pressione enter para continuar.'

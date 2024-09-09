@@ -40,12 +40,17 @@ def main():
     connector = connect_to_database(env_config)
     cursor = connector.cursor()
 
-    path = os.path.join(os.getcwd(), 'processos', 'temp')
+    path = os.path.join(os.getcwd(), 'processos')
 
     if not os.path.exists(path):
-        os.makedirs(path)
+        os.makedirs(os.path.join(path, 'temp'))
 
-    tjmg.get_processo_table_essentials_file('test.txt', connection=connector, cursor=cursor)
+    tjmg.get_processo_table_essentials_file(
+        'test.txt',
+        connection=connector,
+        cursor=cursor,
+        path=path
+    )
 
 
 if __name__ == '__main__':
