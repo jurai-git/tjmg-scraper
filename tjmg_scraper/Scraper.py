@@ -6,6 +6,7 @@ import mysql.connector as mysql
 from typing import Optional, List
 from tjmg_scraper import number_scraper as ns
 from time import sleep
+from mysql.connector import Error
 
 
 class Scraper:
@@ -142,3 +143,54 @@ class Scraper:
                 continue
 
         return table
+
+    @staticmethod
+    def clean_numproc(numproc):
+        return numproc.replace('-', '').replace('.', '').replace('/', '')
+
+    @staticmethod
+    def get_processo_table_essentials_file(
+            file,
+            connection,
+            cursor,
+            path=PROCESSO_PATH,
+            lowerbound=385e1,
+            upperbound=22e3,
+            max_fails=10
+    ):
+        path = path or os.path.join(os.getcwd(), 'processos')
+
+        insert_query = """
+            INSERT INTO processos (numero_tjmg, acordao, ementa, sumula) VALUES 
+            (%s, %s, %s, %s)
+        """
+
+        failed_requests = 0
+        while True:
+            with open(file, 'r+') as f:
+                numero = f.readline().strip('\n')
+                if not numero:
+                    break
+                Scraper.remove_first_line(file)
+
+            sleep(0.2)
+            if failed_requests > max_fails:
+                input('Too many failed requests. Check your internet connection and press enter to continue.')
+                failed_requests = 0
+
+            data, acordao = Scraper.get_data_from_numproc(numero, path)
+            if data is None:
+                failed_requests += 1
+                continue
+
+            if not (lowerbound <= len(acordao) <= upperbound):
+                continue
+
+            try:
+                cursor.execute(insert_query, data)
+                connection.commit()
+                failed_requests = 0
+                print('[ + ] Insert successful.')
+            except Error:
+                failed_requests += 1
+                print(f'[ - ] Error inserting into table. Failed attempts: {failed_requests}.')
