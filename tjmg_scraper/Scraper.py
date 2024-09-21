@@ -2,8 +2,7 @@ import os
 import re
 import fitz
 import requests
-import mysql.connector as mysql
-from typing import Optional, List
+from typing import Optional
 from tjmg_scraper import number_scraper as ns
 from time import sleep
 from mysql.connector import Error
@@ -26,19 +25,13 @@ class Scraper:
             f.writelines(lines)
 
     @staticmethod
-    def get_inteiro_teor(numproc: str, path=TEMP_DIR, timeout=TIMEOUT, filename=None):
+    def get_inteiro_teor(numproc: str, filename: str, path=TEMP_DIR, timeout=TIMEOUT):
         parts = ns.get_numproc_numbers(numproc)
         url = ('https://www5.tjmg.jus.br/jurisprudencia/relatorioEspelhoAcordao.do?inteiroTeor=true&ano='
                f'{parts[2]}&ttriCodigo={parts[0]}&codigoOrigem={parts[1]}&numero={parts[3]}&sequencial='
                f'{parts[5]}&sequencialAcordao=0')
 
-        if filename is None:
-            path = path + '/'
-            for string in parts:
-                path = path + string
-            path = path + '.pdf'
-        else:
-            path = f'{path}/{filename}.pdf'
+        path = os.path.join(path, filename)
 
         try:
             response = requests.get(url, allow_redirects=True, timeout=timeout)
@@ -71,8 +64,8 @@ class Scraper:
         try:
             Scraper.get_inteiro_teor(
                 numproc,
+                'acordao.pdf',
                 os.path.join(path, 'temp'),
-                filename='acordao'
             )
         except Exception:
             return None, None
