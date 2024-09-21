@@ -19,10 +19,11 @@ class Scraper:
 
     @staticmethod
     def remove_first_line(file):
-        with open(file, 'r') as f:
+        with open(file, 'r+') as f:
             lines = f.readlines()[1:]
-        with open(file, 'w') as f:
+            f.seek(0)
             f.writelines(lines)
+            f.truncate()
 
     @staticmethod
     def get_inteiro_teor(numproc: str, filename: str, path=TEMP_DIR, timeout=TIMEOUT):
