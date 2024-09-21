@@ -1,21 +1,17 @@
 import os
 import re
-from typing import Optional
-
 import fitz
-import mysql.connector as mysql
 import requests
+from typing import Optional
 from tjmg_scraper import number_scraper as ns
-from os import getcwd
 from time import sleep
-from mysql.connector import Error
 
 
 class Scraper:
     TIMEOUT = 3
     FILE_EXT = '.pdf'
-    TEMP_DIR = os.path.join(getcwd(), 'inteiros-teores')
-    PROCESSO_PATH = os.path.join(getcwd(), 'processos')
+    TEMP_DIR = os.path.join(os.getcwd(), 'inteiros-teores')
+    PROCESSO_PATH = os.path.join(os.getcwd(), 'processos')
 
     def __init__(self):
         pass
