@@ -2,7 +2,8 @@ import os
 import re
 import fitz
 import requests
-from typing import Optional
+import mysql.connector as mysql
+from typing import Optional, List
 from tjmg_scraper import number_scraper as ns
 from time import sleep
 
@@ -100,3 +101,44 @@ class Scraper:
 
         return [acordao, ementa, sumula]
 
+    @staticmethod
+    def get_processo_table_essentials(
+            numprocs,
+            path=PROCESSO_PATH,
+            connection=None,
+            cursor=None,
+            returns=True,
+            lowerbound: int = 385e1,
+            upperbound: int = 22e3,
+            delay=0.15
+    ) -> Optional[List]:
+        table = [] if returns else None
+        using_database = bool(connection)
+
+        insert_query = """
+            INSERT INTO processo (numero_tjmg, acordao, ementa, sumula) VALUES 
+            (%s, %s, %s, %s)
+        """
+
+        for numproc in numprocs:
+            sleep(delay)
+            numproc_clean = Scraper.clean_numproc(numproc)
+            try:
+                data, acordao = Scraper.get_data_from_numproc(numproc_clean, path)
+                if data is None or not (lowerbound <= len(acordao) <= upperbound):
+                    continue
+
+                if using_database:
+                    try:
+                        cursor.execute(insert_query, data)
+                        connection.commit()
+                    except mysql.Error:
+                        print('Error inserting into table')
+
+                if returns:
+                    table.append(data)
+            except Exception as e:
+                print(e)
+                continue
+
+        return table
