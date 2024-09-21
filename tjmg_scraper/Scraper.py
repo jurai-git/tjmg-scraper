@@ -91,7 +91,9 @@ class Scraper:
         data_pdf = re.sub('|'.join(pattern_list), '', acordao_txt, flags=re.DOTALL)
 
         ementa = re.sub(r'(.*?)A\s+C\s+Ó\s+R\s+D\s+Ã\s+O.*', r'\1', data_pdf, flags=re.DOTALL)
-        ementa = ' '.join(ementa.split('\n\n')[:-1]) if ementa.split('\n\n') != 1 else ementa
+        split = ementa.split('\n\n')
+        ementa = ' '.join(split[:-1]) if len(split) != 1 else ementa.join(split)
+        ementa = re.sub(r'\s+', ' ', ementa)
 
         acordao = re.sub(r'.*?V\sO\sT\sO\s+(.*?)SÚMULA.*', r'\1', data_pdf, flags=re.DOTALL)
         sumula = re.sub(r'.*?SÚMULA:+(.*?)', r'\1', data_pdf, flags=re.DOTALL)
