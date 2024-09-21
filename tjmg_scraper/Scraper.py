@@ -82,7 +82,7 @@ class Scraper:
         if acordao_txt is None:
             return None, None
 
-        cleaned_data = Scraper.clean_data(acordao_txt)
+        cleaned_data = Scraper().clean_data(acordao_txt)
         data.extend(cleaned_data)
         return data, cleaned_data[0]
 
