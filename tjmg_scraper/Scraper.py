@@ -163,7 +163,7 @@ class Scraper:
         path = path or os.path.join(os.getcwd(), 'processos')
 
         insert_query = """
-            INSERT INTO processos (numero_tjmg, acordao, ementa, sumula) VALUES 
+            INSERT INTO processo (numero_tjmg, acordao, ementa, sumula) VALUES 
             (%s, %s, %s, %s)
         """
 
