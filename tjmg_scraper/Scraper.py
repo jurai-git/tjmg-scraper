@@ -11,129 +11,114 @@ from mysql.connector import Error
 class Scraper:
     TIMEOUT = 3
     FILE_EXT = '.pdf'
-    TEMP_DIR = os.path.join(os.getcwd(), 'inteiros-teores')
     PROCESSO_PATH = os.path.join(os.getcwd(), 'processos')
+    TEMP_DIR = os.path.join(PROCESSO_PATH, 'temp')
+    BASE_URL = 'https://www5.tjmg.jus.br/jurisprudencia/relatorioEspelhoAcordao.do'
 
     def __init__(self):
-        pass
+        self.session = requests.Session()
 
-    @staticmethod
-    def remove_first_line(file):
+    def remove_first_line(self, file: str) -> None:
         with open(file, 'r+') as f:
             lines = f.readlines()[1:]
             f.seek(0)
             f.writelines(lines)
             f.truncate()
 
-    @staticmethod
-    def get_inteiro_teor(numproc: str, filename: str, path=TEMP_DIR, timeout=TIMEOUT):
+    def get_inteiro_teor(self, numproc: str, filename: str, path: str = TEMP_DIR, timeout: int = TIMEOUT) -> str:
         parts = ns.get_numproc_numbers(numproc)
-        url = ('https://www5.tjmg.jus.br/jurisprudencia/relatorioEspelhoAcordao.do?inteiroTeor=true&ano='
-               f'{parts[2]}&ttriCodigo={parts[0]}&codigoOrigem={parts[1]}&numero={parts[3]}&sequencial='
-               f'{parts[5]}&sequencialAcordao=0')
-
+        url = (
+            f'{self.BASE_URL}?inteiroTeor=true&ano={parts[2]}&ttriCodigo={parts[0]}'
+            f'&codigoOrigem={parts[1]}&numero={parts[3]}&sequencial={parts[5]}&sequencialAcordao=0'
+        )
         path = os.path.join(path, filename)
 
         try:
-            response = requests.get(url, allow_redirects=True, timeout=timeout)
-        except requests.RequestException:
-            print('Failed to make a request.')
-            raise Exception('request_error')
+            response = self.session.get(url, allow_redirects=True, timeout=timeout)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            raise Exception(f'Error downloading PDF: {e}')
 
         with open(path, 'wb') as file:
             file.write(response.content)
         sleep(0.05)
 
-    def extract_text_from_pdf(self, pdf_path: str) -> Optional[str]:
+        return path
+
+    def extract_pdf_text(self, pdf_path: str) -> Optional[str]:
         try:
-            acordao_doc = fitz.open(pdf_path)
-        except Exception:
+            with fitz.open(pdf_path) as pdf_doc:
+                return ''.join([page.get_text() for page in pdf_doc])
+        except Exception as e:
+            print(f'Failed to open or read PDF file: {pdf_path}, Error: {e}')
             return None
 
-        acordao_txt = ''
-        for pagen in range(acordao_doc.page_count):
-            page = acordao_doc.load_page(pagen)
-            acordao_txt += page.get_text()
-
-        return acordao_txt
-
-    @staticmethod
-    def get_data_from_numproc(numproc, path):
-        data = [numproc]
-        pdf_path = os.path.join(path, 'temp', 'acordao.pdf')
-
+    def fetch_and_parse_process_data(self, numproc: str, path: str = TEMP_DIR) -> tuple[Optional[list], Optional[str]]:
         try:
-            Scraper.get_inteiro_teor(
-                numproc,
-                'acordao.pdf',
-                os.path.join(path, 'temp'),
-            )
-        except Exception:
+            pdf_path = self.get_inteiro_teor(numproc, 'acordao.pdf', path)
+            acordao_txt = self.extract_pdf_text(pdf_path)
+            if acordao_txt is None:
+                return None, None
+
+            cleaned_data = self.sanitize_acordao_text(acordao_txt)
+            return [numproc] + cleaned_data, cleaned_data[1]
+        except Exception as e:
+            print(f'Error fetching or parsing process data: {e}')
             return None, None
 
-        acordao_txt = Scraper().extract_text_from_pdf(pdf_path)
+    def sanitize_acordao_text(self, acordao_txt: str) -> list[str]:
+        patterns = [
+            r'^.*?EMENTA:',
+            r'(?<=\n)\d+(?=\n)',
+            r'Tribunal de Justiça de Minas Gerais\n'
+        ]
+        cleaned_text = re.sub('|'.join(patterns), '', acordao_txt, flags=re.DOTALL)
 
-        if acordao_txt is None:
-            return None, None
-
-        cleaned_data = Scraper().clean_data(acordao_txt)
-        data.extend(cleaned_data)
-        return data, cleaned_data[0]
-
-    def clean_data(self, acordao_txt):
-        pattern_list = [r'^.*?EMENTA:', r'(?<=\n)\d+(?=\n)', r'Tribunal de Justiça de Minas Gerais\n']
-        data_pdf = re.sub('|'.join(pattern_list), '', acordao_txt, flags=re.DOTALL)
-
-        ementa = re.sub(r'(.*?)A\s+C\s+Ó\s+R\s+D\s+Ã\s+O.*', r'\1', data_pdf, flags=re.DOTALL)
+        ementa = re.sub(r'(.*?)A\s+C\s+Ó\s+R\s+D\s+Ã\s+O.*', r'\1', cleaned_text, flags=re.DOTALL)
         split = ementa.split('\n\n')
         ementa = ' '.join(split[:-1]) if len(split) != 1 else ementa.join(split)
         ementa = re.sub(r'\s+', ' ', ementa)
 
-        acordao = re.sub(r'.*?V\sO\sT\sO\s+(.*?)SÚMULA.*', r'\1', data_pdf, flags=re.DOTALL)
-        sumula = re.sub(r'.*?SÚMULA:+(.*?)', r'\1', data_pdf, flags=re.DOTALL)
+        acordao = re.sub(r'.*?V\sO\sT\sO\s+(.*?)SÚMULA.*', r'\1', cleaned_text, flags=re.DOTALL)
+        sumula = re.sub(r'.*?SÚMULA:+(.*?)', r'\1', cleaned_text, flags=re.DOTALL)
 
-        ementa = re.sub(r'\s+', ' ', ementa)
-        acordao = re.sub(r'\s+', ' ', acordao)
-        sumula = re.sub(r'\s+', ' ', sumula)
-
-        return [acordao, ementa, sumula]
+        return [ementa.strip(), acordao.strip(), sumula.strip()]
 
     @staticmethod
-    def clean_numproc(numproc):
+    def format_process_number(numproc: str) -> str:
         return numproc.replace('-', '').replace('.', '').replace('/', '')
 
-    @staticmethod
-    def get_processo_table_essentials_file(
-            file,
+    def process_file_and_insert_data(
+            self,
+            file: str,
             connection,
             cursor,
-            db_table,
-            path=PROCESSO_PATH,
-            lowerbound=385e1,
-            upperbound=22e3,
-            max_fails=10
-    ):
-        path = path or os.path.join(os.getcwd(), 'processos')
+            db_table: str,
+            lowerbound: int = 3850,
+            upperbound: int = 22000,
+            max_fails: int = 10
+    ) -> None:
 
         insert_query = f"""
-            INSERT INTO {db_table} (numero_tjmg, acordao, ementa, sumula) VALUES 
-            (%s, %s, %s, %s)
+            INSERT INTO {db_table} (numero_tjmg, acordao, ementa, sumula) 
+            VALUES (%s, %s, %s, %s)
         """
-
         failed_requests = 0
+
         while True:
             with open(file, 'r+') as f:
-                numero = f.readline().strip('\n')
+                numero = f.readline().strip()
                 if not numero:
                     break
-                Scraper.remove_first_line(file)
+                self.remove_first_line(file)
 
             sleep(0.2)
-            if failed_requests > max_fails:
-                input('Too many failed requests. Check your internet connection and press enter to continue.')
+
+            if failed_requests >= max_fails:
+                input('Too many failed requests. Check your internet connection.')
                 failed_requests = 0
 
-            data, acordao = Scraper.get_data_from_numproc(numero, path)
+            data, acordao = self.fetch_and_parse_process_data(numero)
             if data is None:
                 failed_requests += 1
                 continue
@@ -144,8 +129,28 @@ class Scraper:
             try:
                 cursor.execute(insert_query, data)
                 connection.commit()
+                print(f'[ + ] Inserted process {numero} successfully.')
                 failed_requests = 0
-                print('[ + ] Insert successful.')
-            except Error:
-                failed_requests += 1
-                print(f'[ - ] Error inserting into table. Failed attempts: {failed_requests}.')
+            except Error as e:
+                print(f'[ - ] Database insertion error: {e}')
+
+                if e.errno == 1406:
+                    data_length = {
+                        'Number': len(data[0]),
+                        'Acórdão': len(data[1]),
+                        'Ementa': len(data[2]),
+                        'Súmula': len(data[3])
+                    }
+                    print(f'Data Length: {data_length}')
+
+    def run(self,
+            file: str,
+            connection,
+            cursor,
+            db_table: str,
+            lowerbound: int = 3850,
+            upperbound: int = 22000,
+            max_fails: int = 10
+        ):
+
+        self.process_file_and_insert_data(file, connection, cursor, db_table, lowerbound, upperbound, max_fails)

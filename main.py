@@ -13,12 +13,11 @@ def main():
     if not os.path.exists(path):
         os.makedirs(os.path.join(path, 'temp'))
 
-    Scraper.get_processo_table_essentials_file(
+    Scraper().run(
         'test.txt',
         connection=connector,
         cursor=cursor,
         db_table=env_config['db_table'],
-        path=path
     )
 
 
