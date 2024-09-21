@@ -107,6 +107,7 @@ class Scraper:
     @staticmethod
     def get_processo_table_essentials(
             numprocs,
+            db_table,
             path=PROCESSO_PATH,
             connection=None,
             cursor=None,
@@ -118,8 +119,8 @@ class Scraper:
         table = [] if returns else None
         using_database = bool(connection)
 
-        insert_query = """
-            INSERT INTO processo (numero_tjmg, acordao, ementa, sumula) VALUES 
+        insert_query = f"""
+            INSERT INTO {db_table} (numero_tjmg, acordao, ementa, sumula) VALUES 
             (%s, %s, %s, %s)
         """
 
@@ -155,6 +156,7 @@ class Scraper:
             file,
             connection,
             cursor,
+            db_table,
             path=PROCESSO_PATH,
             lowerbound=385e1,
             upperbound=22e3,
@@ -162,8 +164,8 @@ class Scraper:
     ):
         path = path or os.path.join(os.getcwd(), 'processos')
 
-        insert_query = """
-            INSERT INTO processo (numero_tjmg, acordao, ementa, sumula) VALUES 
+        insert_query = f"""
+            INSERT INTO {db_table} (numero_tjmg, acordao, ementa, sumula) VALUES 
             (%s, %s, %s, %s)
         """
 

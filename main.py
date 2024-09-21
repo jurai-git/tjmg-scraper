@@ -17,6 +17,7 @@ def main():
         'test.txt',
         connection=connector,
         cursor=cursor,
+        db_table=env_config['db_table'],
         path=path
     )
 
